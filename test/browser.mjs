@@ -1,0 +1,20 @@
+import { chromium } from 'playwright-core';
+
+const browser = await chromium.launch({headless: true});
+const page = await browser.newPage({ignoreHTTPSErrors: true});
+await page.goto(process.env.URL || 'https://nature-signal-simulator.ichabod-crane.net/', {waitUntil: 'networkidle'});
+await page.keyboard.press('2');
+const before = await page.locator('#palette').textContent();
+await page.keyboard.press('Space');
+await page.waitForTimeout(950);
+const replay = await page.locator('#events').textContent();
+await page.keyboard.press('r');
+await page.keyboard.press('Space');
+await page.waitForTimeout(950);
+const repeat = await page.locator('#events').textContent();
+if (before !== 'Palette: rain slate & electric blue') throw new Error(`unexpected palette: ${before}`);
+if (replay !== repeat) throw new Error(`replay diverged: ${replay} / ${repeat}`);
+await page.keyboard.press('3');
+if (await page.locator('#palette').textContent() !== 'Palette: ink & moonstone') throw new Error('keyboard trace selection failed');
+console.log(`keyboard controls and deterministic replay passed: ${replay}`);
+await browser.close();
